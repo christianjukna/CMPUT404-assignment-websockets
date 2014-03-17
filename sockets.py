@@ -26,6 +26,18 @@ app = Flask(__name__)
 sockets = Sockets(app)
 app.debug = True
 
+clients = list()
+
+class Client:
+    def __init__(self):
+        self.queue = queue.Queue()
+
+    def put(self, v):
+        self.queue.put_nowait(v)
+
+    def get(self):
+        return self.queue.get()
+
 class World:
     def __init__(self):
         self.clear()
