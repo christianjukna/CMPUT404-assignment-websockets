@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-# Copyright (c) 2013-2014 Abram Hindle
+# Copyright (c) 2013-2014 Abram Hindle, Christian
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -26,8 +26,7 @@ app = Flask(__name__)
 sockets = Sockets(app)
 app.debug = True
 
-clients = list()
-
+#Taken from Hindle Websocket Example, referenced in readme
 class Client:
     def __init__(self):
         self.queue = queue.Queue()
@@ -71,10 +70,14 @@ class World:
     def world(self):
         return self.space
 
-myWorld = World()        
+myWorld = World()  
+
+clients = list()      
 
 def set_listener( entity, data ):
-    ''' do something with the update ! '''
+    packet = json.dumps({entity: data})
+    for c in clients:
+       c.put(packet)
 
 myWorld.add_set_listener( set_listener )
         
@@ -90,8 +93,9 @@ def read_ws(ws,client):
             data = ws.receive()
             if (data is not None):
                 entities = json.loads(data)
-                for key in data:
-                    print myWorld.set(key,data[key])
+                for entity, data in entities.iteritems():
+                    myWorld.set(entity, data)
+                    myWorld.update_listeners(entity)
             else:
                 break
     except:
@@ -100,27 +104,27 @@ def read_ws(ws,client):
 
 @sockets.route('/subscribe')
 def subscribe_socket(ws):
-    '''Fufill the websocket URL of /subscribe, every update notify the
-       websocket and read updates from the websocket '''
+
+    #Using Hindles websocket sample
     client = Client()
+    #Add the client to the client list
     clients.append(client)
     g = gevent.spawn( read_ws, ws, client )    
-    print "Subscribing"
 
-    client.put(jsonify(myWorld.world()));
+    #Give the new client the current world
+    ws.send(json.dumps(myWorld.world()))
 
     try:
         while True:
             # block here
             msg = client.get()
-            print "Got a message!"
             ws.send(msg)
     except Exception as e:# WebSocketError as e:
         print "WS Error %s" % e
     finally:
-        clients.remove(client)
+        myWorld.listeners.remove(client)
         gevent.kill(g)
-
+    return None
 
 def flask_post_json():
     '''Ah the joys of frameworks! They do so much work for you

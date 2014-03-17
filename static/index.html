@@ -6,7 +6,7 @@
     <meta content='width=device-width; height=device-height; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;' name='viewport' />
     <meta name="viewport" content="width=device-width" />
     <meta name="license" content="
-        Copyright 2013 Google, Abram Hindle
+        Copyright 2013 Google, Abram Hindle, Christian Jukna
         
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -123,9 +123,9 @@ function getPosition(e) {
 
 function addEntity(entity, data) {
     world[entity] = data;
-    drawNextFrame(); // (but should we?)
-    socket.send(JSON.dumps(world));
-
+    // Send the world data over the socket
+    socket.send(JSON.stringify(world));
+    drawNextFrame();
 
 }
 var counter = 0;
@@ -256,7 +256,7 @@ function wsSetup() {
     socket = new WebSocket(url);
     socket.onopen = function() {
         //XXX: TODO What are you going to do here?
-        //Not doing anything
+        //Nothing
     };
     socket.onerror = function(msg) {
         debug("WebSocket Error:" + msg.data);
@@ -267,7 +267,7 @@ function wsSetup() {
             var data = JSON.parse(msg.data);
             
             for (var entity in data) {
-                addEntity(entity, data[entity]);
+                world[entity] = data[entity]
             }
             drawNextFrame();
         } catch (e) {
@@ -282,7 +282,7 @@ wsSetup();
 
 
 // 30 frames per second
-setInterval( update, 1000/30.0);
+setInterval( update, 10000/30.0);
 
 
     </script>
