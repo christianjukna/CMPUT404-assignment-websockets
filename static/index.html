@@ -124,7 +124,9 @@ function getPosition(e) {
 function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
-    //XXX: Send a XHTML Request that updates the entity you just modified!
+    socket.send(JSON.dumps(world));
+
+
 }
 var counter = 0;
 function addEntityWithoutName(data) {
@@ -254,6 +256,7 @@ function wsSetup() {
     socket = new WebSocket(url);
     socket.onopen = function() {
         //XXX: TODO What are you going to do here?
+        //Not doing anything
     };
     socket.onerror = function(msg) {
         debug("WebSocket Error:" + msg.data);
@@ -261,7 +264,12 @@ function wsSetup() {
     socket.onmessage = function(msg) {  
         try {
             debug("WebSocket Recv:" + msg.data);
-            //XXX: TODO What are you going to do here?            
+            var data = JSON.parse(msg.data);
+            
+            for (var entity in data) {
+                addEntity(entity, data[entity]);
+            }
+            drawNextFrame();
         } catch (e) {
             alert("socket on message: " + e);
         }
