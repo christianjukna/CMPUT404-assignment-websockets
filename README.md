@@ -14,7 +14,7 @@ pip install flask-sockets
 
 pip install ws4py
 
-Souce
+Source
 =======
 Used many parts of websocket examples discussed in class
 
