@@ -272,10 +272,11 @@ function wsSetup() {
         try {
             //debug("WebSocket Recv:" + msg.data);
             var data = JSON.parse(msg.data);
-            
+            // update the world on socket message
             for (var entity in data) {
                 world[entity] = data[entity]
             }
+            // draw the next frame after the update
             drawNextFrame();
         } catch (e) {
             alert("socket on message: " + e);
