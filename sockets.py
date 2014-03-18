@@ -72,13 +72,17 @@ class World:
 
 myWorld = World()  
 
+# Initialize a blank client list (as per Websocket example)
 clients = list()      
 
+# Create definition for the listener and have it update all the client
+# with json using json.dumps
 def set_listener( entity, data ):
     packet = json.dumps({entity: data})
     for c in clients:
        c.put(packet)
 
+# Set the myworld listener to the set listener above
 myWorld.add_set_listener( set_listener )
         
 @app.route('/')
@@ -88,13 +92,19 @@ def hello():
 
 def read_ws(ws,client):
     '''A greenlet function that reads from the websocket and updates the world'''
+    # Try to read from the websocket, structure taken from Hindle Websocket example
     try:
         while True:
             data = ws.receive()
             if (data is not None):
+                # load the multiple entities from the json data sent from index.html
                 entities = json.loads(data)
+                # for the corresponding entity and data ex {y: 'some coord'}
+                # update myWorld with said entities
                 for entity, data in entities.iteritems():
+                    # setting the myWorld entities
                     myWorld.set(entity, data)
+                    # call update listeners after the entity has been added
                     myWorld.update_listeners(entity)
             else:
                 break
@@ -105,15 +115,16 @@ def read_ws(ws,client):
 @sockets.route('/subscribe')
 def subscribe_socket(ws):
 
-    #Using Hindles websocket sample
+    # Using Hindles websocket sample
     client = Client()
-    #Add the client to the client list
+    # Add the client to the client list
     clients.append(client)
     g = gevent.spawn( read_ws, ws, client )    
 
-    #Give the new client the current world
+    # Give the new client the current world
     ws.send(json.dumps(myWorld.world()))
 
+    # Setting up and blocking the websocket as per Hindles Websocket example
     try:
         while True:
             # block here
@@ -122,7 +133,7 @@ def subscribe_socket(ws):
     except Exception as e:# WebSocketError as e:
         print "WS Error %s" % e
     finally:
-        myWorld.listeners.remove(client)
+        clients.remove(client)
         gevent.kill(g)
     return None
 

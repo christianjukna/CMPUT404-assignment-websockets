@@ -48,13 +48,14 @@ world = {};
 function drawCircle(context,entity) {
     with(context) {
         beginPath();                
-        lineWidth = 3;
+        lineWidth = 100;
         var x = entity["x"];
         var y = entity["y"];
         //moveTo(x,y);
         fillStyle = entity["colour"];
         strokeStyle = fillStyle;
-        arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
+        arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false); 
+        globalAlpha = 0.50; 
         stroke();                                
     }
 }
@@ -123,8 +124,15 @@ function getPosition(e) {
 
 function addEntity(entity, data) {
     world[entity] = data;
-    // Send the world data over the socket
-    socket.send(JSON.stringify(world));
+    // Send the new entity over the socket and not the whole world
+    // sending the whole world is not neccessary
+    // initialize a new object
+    var newEntity = {};
+    // set the value for entity = data
+    newEntity[entity] = data;
+    // send the entity over the socket in a JSON format
+    socket.send(JSON.stringify(newEntity));
+    //Draw the frame after we've sent the new entity
     drawNextFrame();
 
 }
@@ -231,17 +239,16 @@ mouse = (function() {
 })();
 
 // Add the application specific mouse listeners!
-//XXX: TODO Make these prettier!
 mouse.mousedowners.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
+    addEntityWithoutName({'x':x,'y':y,'colour':'#0000FF'});
 });
 
 mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'red'});
+    addEntityWithoutName({'x':x,'y':y,'colour':('#'+(Math.random()*0xFFFFFF<<0).toString(16))});
 });
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
+    addEntityWithoutName({'x':x,'y':y,'colour':'#FF99FF',
                           'radius':10});
 });
 
@@ -256,14 +263,14 @@ function wsSetup() {
     socket = new WebSocket(url);
     socket.onopen = function() {
         //XXX: TODO What are you going to do here?
-        //Nothing
+        //Nothing needs to be done
     };
     socket.onerror = function(msg) {
         debug("WebSocket Error:" + msg.data);
     };
     socket.onmessage = function(msg) {  
         try {
-            debug("WebSocket Recv:" + msg.data);
+            //debug("WebSocket Recv:" + msg.data);
             var data = JSON.parse(msg.data);
             
             for (var entity in data) {
