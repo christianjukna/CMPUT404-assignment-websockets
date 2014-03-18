@@ -29,7 +29,7 @@ freetests.py is LICENSE'D under a BSD-like license:
 
 From ws4py
 
-Copyright (c) 2011-2014, Sylvain Hellegouarch, Abram Hindle
+Copyright (c) 2011-2014, Sylvain Hellegouarch, Abram Hindle, Christian Jukna
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
